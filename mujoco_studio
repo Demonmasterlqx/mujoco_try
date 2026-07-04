@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+_source_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+_mujoco_home="${_source_dir}/mujoco/mujoco-3.10.0"
+_mujoco_bin="${_mujoco_home}/bin"
+_mujoco_studio="${_mujoco_bin}/mujoco_studio"
+
+if [[ ! -d "${_mujoco_home}" ]]; then
+  echo "source.bash: MuJoCo directory not found: ${_mujoco_home}" >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+if [[ ! -d "${_mujoco_bin}" ]]; then
+  echo "source.bash: MuJoCo bin directory not found: ${_mujoco_bin}" >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+if [[ ! -x "${_mujoco_studio}" ]]; then
+  echo "source.bash: MuJoCo Studio executable not found: ${_mujoco_studio}" >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+export MUJOCO_HOME="${_mujoco_home}"
+
+case ":${PATH}:" in
+  *:"${_mujoco_bin}":*) ;;
+  *) export PATH="${_mujoco_bin}:${PATH}" ;;
+esac
+
+cd "${_mujoco_home}" || return 1 2>/dev/null || exit 1
+"${_mujoco_studio}" "$@"
+_mujoco_status=$?
+
+unset _source_dir _mujoco_home _mujoco_bin _mujoco_studio
+return "${_mujoco_status}" 2>/dev/null || exit "${_mujoco_status}"

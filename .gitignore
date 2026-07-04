@@ -1,0 +1,5 @@
+# mujoco log
+MUJOCO_LOG.TXT
+
+# C++ building
+build/
