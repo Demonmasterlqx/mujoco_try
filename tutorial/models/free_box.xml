@@ -1,0 +1,12 @@
+<mujoco model="free_box">
+    <option timestep="0.002" gravity="0 0 -9.81"/>
+
+    <worldbody>
+        <light name="top_light" pos="0 0 3" dir="0 0 -1"/>
+        <geom name="ground" type="plane" size="2 2 0.05" rgba="0.8 0.8 0.8 1"/>
+        <body name="box" pos="0 0 1">
+            <freejoint name="box_freejoint"/>
+            <geom name="box_geom" type="box" size="0.1 0.2 0.3" mass="1.0" rgba="0.1 0.6 0.2 1"/>
+        </body>
+    </worldbody>
+</mujoco>

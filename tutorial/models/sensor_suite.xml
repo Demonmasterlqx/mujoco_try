@@ -1,0 +1,64 @@
+<mujoco model="sensor_suite">
+    <compiler angle="radian" autolimits="true"/>
+    <option timestep="0.002" gravity="0 0 -9.81" magnetic="0.2 0.1 0.5"/>
+
+    <default>
+        <joint damping="0.05" armature="0.01"/>
+        <geom rgba="0.3 0.5 0.8 1"/>
+        <site size="0.025" rgba="1 0.2 0.2 1"/>
+    </default>
+
+    <worldbody>
+        <light name="top_light" pos="0 0 4" dir="0 0 -1"/>
+        <geom name="ground" type="plane" size="3 3 0.05" rgba="0.8 0.8 0.8 1"/>
+        <body name="range_target_body" pos="0.8 0 1.6">
+            <geom name="range_target" type="box" size="0.12 0.12 0.04"
+                  rgba="0.2 0.8 0.2 1"/>
+        </body>
+
+        <site name="range_site" pos="0.8 0 1.0" size="0.03" rgba="0 1 0 1"/>
+
+        <body name="wrench_parent" pos="-0.6 0 0.35">
+            <geom name="parent_box" type="box" size="0.08 0.08 0.08" mass="1.0" rgba="0.7 0.7 0.7 1"/>
+            <body name="wrench_child" pos="0 0 0.18">
+                <geom name="child_box" type="box" size="0.05 0.05 0.05" mass="0.4" rgba="0.8 0.3 0.3 1"/>
+                <site name="wrench_site" pos="0 0 0" size="0.02" rgba="1 1 0 1"/>
+            </body>
+        </body>
+
+        <body name="link1" pos="0 0 0.55">
+            <joint name="hinge" type="hinge" axis="0 1 0" limited="true" range="-1.2 1.2"/>
+            <geom name="link_capsule" type="capsule" fromto="0 0 0 0 0 0.45" size="0.035" mass="0.5"/>
+            <site name="imu_site" pos="0 0 0.42"/>
+            <site name="touch_zone" type="sphere" pos="0 0 0.45" size="0.08" rgba="0.9 0.1 0.1 0.3"/>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <motor name="hinge_motor" joint="hinge" ctrlrange="-2 2" gear="1"/>
+    </actuator>
+
+    <sensor>
+        <touch name="touch_sum" site="touch_zone"/>
+        <accelerometer name="imu_accel" site="imu_site"/>
+        <velocimeter name="imu_velocity" site="imu_site"/>
+        <gyro name="imu_gyro" site="imu_site"/>
+        <force name="wrench_force" site="wrench_site"/>
+        <torque name="wrench_torque" site="wrench_site"/>
+        <magnetometer name="imu_magnetometer" site="imu_site"/>
+        <rangefinder name="target_range" site="range_site"/>
+        <jointpos name="hinge_position" joint="hinge"/>
+        <jointvel name="hinge_velocity" joint="hinge"/>
+        <actuatorfrc name="motor_force" actuator="hinge_motor"/>
+        <jointactuatorfrc name="joint_motor_force" joint="hinge"/>
+        <framepos name="imu_frame_position" objtype="site" objname="imu_site"/>
+        <framequat name="imu_frame_quaternion" objtype="site" objname="imu_site"/>
+        <framelinvel name="imu_frame_linear_velocity" objtype="site" objname="imu_site"/>
+        <frameangvel name="imu_frame_angular_velocity" objtype="site" objname="imu_site"/>
+        <subtreecom name="link_subtree_com" body="link1"/>
+        <subtreelinvel name="link_subtree_linear_velocity" body="link1"/>
+        <subtreeangmom name="link_subtree_angular_momentum" body="link1"/>
+        <clock name="simulation_clock"/>
+        <user name="user_link_state" objtype="body" objname="link1" dim="2" needstage="vel"/>
+    </sensor>
+</mujoco>

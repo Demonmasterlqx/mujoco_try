@@ -25,3 +25,4 @@ set_target_properties(mujoco::mujoco
     INTERFACE_INCLUDE_DIRECTORIES "${MUJOCO_ROOT}/include;${MUJOCO_ROOT}/include/mujoco")
 
 add_subdirectory(libs/hello)
+add_subdirectory(tutorial)

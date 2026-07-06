@@ -1,0 +1,30 @@
+<mujoco model="hinge_arm">
+    <compiler angle="radian" autolimits="true"/>
+    <option timestep="0.002" gravity="0 0 -9.81"/>
+
+    <default>
+        <joint damping="0.08" armature="0.01"/>
+        <geom rgba="0.2 0.4 0.8 1"/>
+    </default>
+
+    <worldbody>
+        <light name="top_light" pos="0 0 3" dir="0 0 -1"/>
+        <geom name="ground" type="plane" size="2 2 0.05" rgba="0.8 0.8 0.8 1"/>
+        <body name="arm" pos="0 0 0.6">
+            <joint name="hinge" type="hinge" axis="0 1 0" limited="true" range="-1.57 1.57"/>
+            <geom name="arm_capsule" type="capsule" fromto="0 0 0 0 0 0.5" size="0.035" mass="0.4"/>
+            <site name="tip" pos="0 0 0.5" size="0.025" rgba="1 0.2 0.2 1"/>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <motor name="hinge_motor" joint="hinge" ctrlrange="-3 3" gear="1"/>
+    </actuator>
+
+    <sensor>
+        <jointpos name="hinge_position" joint="hinge"/>
+        <jointvel name="hinge_velocity" joint="hinge"/>
+        <actuatorfrc name="motor_force" actuator="hinge_motor"/>
+        <framepos name="tip_position" objtype="site" objname="tip"/>
+    </sensor>
+</mujoco>
