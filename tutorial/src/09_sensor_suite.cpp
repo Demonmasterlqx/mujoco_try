@@ -17,6 +17,8 @@ void user_sensor_callback(const mjModel* model, mjData* data, int stage) {
         const int address = model->sensor_adr[sensor_id];
         const int body_id = model->sensor_objid[sensor_id];
         data->sensordata[address] = data->xpos[3 * body_id + 2];
+        // The user sensor exposes qvel[0], the hinge generalized velocity, as its
+        // second custom output value.
         data->sensordata[address + 1] = data->qvel[0];
     }
 }
@@ -45,6 +47,8 @@ int main() {
         const mjModel* model = simulation.model.get();
         mjData* data = simulation.data.get();
 
+        // Seed generalized position/velocity and actuator command so the sensor
+        // table has nonzero joint, IMU, actuator, and user-sensor readings.
         data->qpos[0] = 0.3;
         data->qvel[0] = -0.2;
         data->ctrl[0] = 1.0;

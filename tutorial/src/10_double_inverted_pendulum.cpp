@@ -62,6 +62,8 @@ public:
     JointState read() const {
         JointState state;
         for (int i = 0; i < 2; ++i) {
+            // qpos uses the joint position address; qvel uses the joint dof
+            // address. For these hinge joints they map to angle and angular rate.
             state.position[i] = data_->qpos[model_->jnt_qposadr[joint_ids_[i]]];
             state.velocity[i] = data_->qvel[model_->jnt_dofadr[joint_ids_[i]]];
         }
@@ -70,6 +72,8 @@ public:
 
     void write(const JointCommand& command) {
         for (int i = 0; i < 2; ++i) {
+            // ctrl is indexed by actuator order. The XML defines one motor for
+            // each joint, so command.effort[i] maps directly to ctrl[i].
             data_->ctrl[i] = command.effort[i];
         }
     }
@@ -92,6 +96,7 @@ int main() {
         if (model->nkey > 0) {
             mj_resetDataKeyframe(model, data, 0);
         } else {
+            // Fallback seed: qpos[0] and qpos[1] are the two hinge angles.
             data->qpos[0] = 0.12;
             data->qpos[1] = -0.08;
         }
@@ -125,6 +130,7 @@ int main() {
         std::cout << "joint2_position=" << final_state.position[1] << '\n';
         std::cout << "joint1_velocity=" << final_state.velocity[0] << '\n';
         std::cout << "joint2_velocity=" << final_state.velocity[1] << '\n';
+        // Print the final actuator command vector.
         mujoco_tutorial::print_vector("ctrl", data->ctrl, model->nu);
         mujoco_tutorial::print_sensor_table(model, data);
     } catch (const std::exception& error) {

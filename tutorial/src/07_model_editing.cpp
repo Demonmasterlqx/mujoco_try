@@ -96,6 +96,8 @@ int main() {
         mujoco_tutorial::print_model_summary(model.get());
         std::cout << "saved_xml_prefix=" << std::string(xml.data()).substr(0, 160) << '\n';
         std::cout << "time=" << data->time << '\n';
+        // qpos prints the generated free joint's generalized position after the
+        // falling-box simulation.
         mujoco_tutorial::print_vector("qpos", data->qpos, model->nq);
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

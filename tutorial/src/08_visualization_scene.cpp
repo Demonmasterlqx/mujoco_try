@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <thread>
+
 int main() {
     try {
         auto simulation = mujoco_tutorial::load_simulation(
@@ -17,6 +19,8 @@ int main() {
         mjv_defaultScene(&scene);
         mjv_makeScene(model, &scene, 1000);
 
+        // qpos[0] is the hinge angle used to pose the arm before building the
+        // abstract visualization scene.
         data->qpos[0] = 0.25;
         mj_forward(model, data);
         mjv_updateScene(model, data, &option, nullptr, &camera, mjCAT_ALL, &scene);
@@ -26,6 +30,8 @@ int main() {
         if (scene.ngeom > 0) {
             std::cout << "first_geom_type=" << scene.geoms[0].type << '\n';
         }
+
+        // std::this_thread::sleep_for(std::chrono::seconds(20));
 
         mjv_freeScene(&scene);
     } catch (const std::exception& error) {

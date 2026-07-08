@@ -23,6 +23,8 @@ int main() {
         const int qpos_address = model->jnt_qposadr[hinge_id];
         const int qvel_address = model->jnt_dofadr[hinge_id];
 
+        // qpos stores generalized position. The hinge joint contributes one angle
+        // at model->jnt_qposadr[hinge_id].
         data->qpos[qpos_address] = -0.7;
         mj_forward(model, data);
 
@@ -34,6 +36,8 @@ int main() {
         for (int step = 0; step < step_count; ++step) {
             mj_step1(model, data);
 
+            // qvel stores generalized velocity at the joint dof address, while
+            // ctrl[0] writes the command for the first motor actuator.
             const mjtNum position = data->qpos[qpos_address];
             const mjtNum velocity = data->qvel[qvel_address];
             data->ctrl[0] = clamp(kp * (target - position) - kd * velocity, -3.0, 3.0);

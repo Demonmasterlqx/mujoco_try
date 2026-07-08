@@ -11,6 +11,8 @@ int main() {
         mjData* data = simulation.data.get();
 
         const int tip_site = mujoco_tutorial::require_id(model, mjOBJ_SITE, "tip");
+        // Seed the hinge generalized position and velocity before querying mass,
+        // Jacobians, inverse dynamics, and energy at this state.
         data->qpos[0] = 0.4;
         data->qvel[0] = 0.2;
         mj_forward(model, data);

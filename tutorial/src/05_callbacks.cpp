@@ -18,6 +18,8 @@ void control_callback(const mjModel* model, mjData* data) {
     const int qpos_address = model->jnt_qposadr[hinge_id];
     const int qvel_address = model->jnt_dofadr[hinge_id];
     const mjtNum target = 0.25;
+    // qpos/qvel read the hinge angle and angular velocity. ctrl[0] is the motor
+    // command applied by MuJoCo during the control callback.
     data->ctrl[0] = clamp(16.0 * (target - data->qpos[qpos_address]) -
                               1.5 * data->qvel[qvel_address],
                           -3.0, 3.0);
@@ -47,6 +49,7 @@ int main() {
         const mjModel* model = simulation.model.get();
         mjData* data = simulation.data.get();
 
+        // This model has one hinge dof, so qpos[0] seeds its initial angle.
         data->qpos[0] = -0.9;
         mj_forward(model, data);
 
@@ -59,6 +62,8 @@ int main() {
         std::cout << "callback_restored="
                   << (mjcb_control == previous_callback ? "true" : "false") << '\n';
         std::cout << "final_time=" << data->time << '\n';
+        // Print generalized position, generalized velocity, and actuator command
+        // after the callback-driven rollout.
         mujoco_tutorial::print_vector("qpos", data->qpos, model->nq);
         mujoco_tutorial::print_vector("qvel", data->qvel, model->nv);
         mujoco_tutorial::print_vector("ctrl", data->ctrl, model->nu);

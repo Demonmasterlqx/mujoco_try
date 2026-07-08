@@ -23,6 +23,7 @@ done
 
 ## Documentation
 
+- Chinese version: `README.zh-CN.md`, `debug.zh-CN.md`, and `tutorial/docs/*.zh-CN.md`.
 - `tutorial/docs/00_overview.md`: route map and demo index.
 - `tutorial/docs/01_programming_basics.md`: loading, stepping, state, control, callbacks, dynamics, model editing, abstract visualization, native UI, and plugin loading.
 - `tutorial/docs/02_double_inverted_pendulum_controller.md`: fixed-step two-joint inverted pendulum system with a ros2_control-style controller loop.

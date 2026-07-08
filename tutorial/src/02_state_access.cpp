@@ -10,6 +10,9 @@ int main() {
         const mjModel* model = simulation.model.get();
         mjData* data = simulation.data.get();
 
+        // qpos is generalized position, qvel is generalized velocity, and ctrl is
+        // the actuator command. hinge_arm has one hinge dof and one motor, so [0]
+        // addresses the hinge angle, hinge angular velocity, and motor command.
         data->qpos[0] = 0.35;
         data->qvel[0] = -0.15;
         data->ctrl[0] = 0.25;
@@ -24,6 +27,7 @@ int main() {
         mujoco_tutorial::print_vector("saved state", state.data(), state_size);
 
         data->time = 12.0;
+        // Mutate the same state fields to prove mj_setState restores them later.
         data->qpos[0] = -0.75;
         data->qvel[0] = 1.0;
         data->ctrl[0] = -1.0;
