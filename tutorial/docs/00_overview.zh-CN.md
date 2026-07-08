@@ -10,7 +10,7 @@
 - Extensions and plugins: https://mujoco.readthedocs.io/en/stable/programming/extension.html
 - XML sensor reference: https://mujoco.readthedocs.io/en/stable/XMLreference.html#sensor
 
-代码刻意保持小而直接，默认都是文本模式。下面每个功能点都有一个可运行 demo，生成在 `build/bin/`；当前教程集合是 `tutorial_01` 到 `tutorial_13`。
+代码刻意保持小而直接，多数 demo 默认是文本模式。`tutorial_14_visualized_double_pendulum` 在有显示环境时会打开 GLFW/OpenGL 窗口，也支持用 `--headless-check` 做批量验证。依赖可用时，下面每个功能点都有一个可运行 demo，生成在 `build/bin/`；完整教程集合是 `tutorial_01` 到 `tutorial_14`。
 
 ## Demo 地图
 
@@ -29,13 +29,21 @@
 | `tutorial_11_rm26_import_check` | `tutorial/src/11_rm26_import_check.cpp` | RM26 split URDF | 验证导入的 RM26 模型能被 MuJoCo 加载 |
 | `tutorial_12_ui_definition` | `tutorial/src/12_ui_definition.cpp` | 无 | 原生 `mjUI` section 和 item 定义 |
 | `tutorial_13_plugin_loading` | `tutorial/src/13_plugin_loading.cpp` | MuJoCo plugin sample | 加载第一方插件库和插件传感器模型 |
+| `tutorial_14_visualized_double_pendulum` | `tutorial/src/14_visualized_double_pendulum.cpp` | `double_inverted_pendulum.xml` | 在 GLFW/OpenGL 窗口中展示受控双倒立摆 |
 
 ## 构建与验证
+
+可视化 demo 为教程构建新增了两个可选系统依赖：GLFW 和 OpenGL。当 CMake 能以 `glfw3` 和 `OpenGL` 解析它们时，会构建 `tutorial_14_visualized_double_pendulum`；否则只跳过这个窗口 demo，并继续构建 `tutorial_01` 到 `tutorial_13`。
 
 ```bash
 cmake -S . -B build
 cmake --build build -j 8
-for exe in build/bin/tutorial_*; do "$exe"; done
+for exe in build/bin/tutorial_*; do
+    case "$(basename "$exe")" in
+        tutorial_14_visualized_double_pendulum) "$exe" --headless-check ;;
+        *) "$exe" ;;
+    esac
+done
 ```
 
 构建期路径宏被有意挂在公共教程目标上，并以 public 可见性传递：
@@ -46,9 +54,12 @@ for exe in build/bin/tutorial_*; do "$exe"; done
 
 除非公共 helper API 也随之调整，否则不要把这些宏下放到单个可执行文件。
 
-最近一次本地验证中，13 个教程 demo 全部以 exit code 0 结束。关键输出检查：
+探索性的 CMake 探测命令不要在源码根目录运行。一次性的 find-package 检查如果从仓库根目录发起，可能留下顶层 `CMakeFiles/` 目录；它不是项目的一部分。
+
+最近一次本地验证中，14 个教程 demo 全部以 exit code 0 结束。关键输出检查：
 
 - `tutorial_10_double_inverted_pendulum` 输出 `steps=3000`、`fixed_period=0.001` 和 `final_time=3`。
+- `tutorial_14_visualized_double_pendulum --duration 0.05` 在有显示环境时输出 `window_opened=true`、`simulation_steps=50` 和 `final_time=0.05`。批量运行时用 `--headless-check`，会输出 `headless_check_steps=250`。
 - `tutorial_09_sensor_suite` 输出正的 `target_range` 命中距离，当前是 `0.560000`。
 - `tutorial_11_rm26_import_check` 输出：
 

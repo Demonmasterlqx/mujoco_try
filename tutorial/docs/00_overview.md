@@ -10,7 +10,7 @@ Official reference used for this tutorial:
 - Extensions and plugins: https://mujoco.readthedocs.io/en/stable/programming/extension.html
 - XML sensor reference: https://mujoco.readthedocs.io/en/stable/XMLreference.html#sensor
 
-The code is intentionally small and text-mode by default. Every feature below has a runnable demo in `build/bin/`; the current tutorial set is `tutorial_01` through `tutorial_13`.
+The code is intentionally small and most demos are text-mode by default. `tutorial_14_visualized_double_pendulum` opens a GLFW/OpenGL window when a display is available and also supports `--headless-check` for batch verification. Every feature below has a runnable demo in `build/bin/` when its dependencies are available; the full tutorial set is `tutorial_01` through `tutorial_14`.
 
 ## Demo Map
 
@@ -29,13 +29,21 @@ The code is intentionally small and text-mode by default. Every feature below ha
 | `tutorial_11_rm26_import_check` | `tutorial/src/11_rm26_import_check.cpp` | RM26 split URDF | verifies imported RM26 model loads in MuJoCo |
 | `tutorial_12_ui_definition` | `tutorial/src/12_ui_definition.cpp` | none | native `mjUI` section and item definition |
 | `tutorial_13_plugin_loading` | `tutorial/src/13_plugin_loading.cpp` | MuJoCo plugin sample | loads first-party plugin libraries and a plugin sensor model |
+| `tutorial_14_visualized_double_pendulum` | `tutorial/src/14_visualized_double_pendulum.cpp` | `double_inverted_pendulum.xml` | shows the controlled double inverted pendulum in a GLFW/OpenGL window |
 
 ## Build And Verification
+
+The visualized demo adds two optional system dependencies to the tutorial build: GLFW and OpenGL. When CMake can resolve them as `glfw3` and `OpenGL`, it builds `tutorial_14_visualized_double_pendulum`; otherwise it skips only that windowed demo and still builds `tutorial_01` through `tutorial_13`.
 
 ```bash
 cmake -S . -B build
 cmake --build build -j 8
-for exe in build/bin/tutorial_*; do "$exe"; done
+for exe in build/bin/tutorial_*; do
+    case "$(basename "$exe")" in
+        tutorial_14_visualized_double_pendulum) "$exe" --headless-check ;;
+        *) "$exe" ;;
+    esac
+done
 ```
 
 Build-time path macros are intentionally attached to the common tutorial target with public visibility:
@@ -46,9 +54,12 @@ Build-time path macros are intentionally attached to the common tutorial target 
 
 Do not move these macros down to individual executables unless the common helper API changes too.
 
-The latest local verification completed all 13 tutorial demos with exit code 0. Key output checks:
+Keep exploratory CMake probes out of the source root. Running one-shot find-package checks from the repository root can leave a stray top-level `CMakeFiles/` directory that is not part of the project.
+
+The latest local verification completed all 14 tutorial demos with exit code 0. Key output checks:
 
 - `tutorial_10_double_inverted_pendulum` reports `steps=3000`, `fixed_period=0.001`, and `final_time=3`.
+- `tutorial_14_visualized_double_pendulum --duration 0.05` reports `window_opened=true`, `simulation_steps=50`, and `final_time=0.05` when a display is available. `--headless-check` reports `headless_check_steps=250` for batch runs.
 - `tutorial_09_sensor_suite` reports `target_range` with a positive hit distance, currently `0.560000`.
 - `tutorial_11_rm26_import_check` reports:
 

@@ -85,3 +85,52 @@ This file records the implementation and import pitfalls encountered while build
 - Cause: rangefinder rays attached to sites use the site's positive Z axis and exclude geoms attached to the same body as the sensor site. Early variants either aimed at empty space or placed the target geom in `worldbody`, the same body as the site.
 - Fix: added a `range_target` geom in a child body along the site's positive Z direction and renamed the sensor to `target_range`.
 - Affected docs: the sensor suite guide notes that `target_range` should produce a positive hit distance.
+
+## 2026-07-08 - Shared Controller Refactor Needs Qualified Names
+
+- Symptom: after moving the double inverted pendulum controller into shared tutorial files, `tutorial_10_double_inverted_pendulum` failed to compile because `MujocoJointSystem`, `UprightPdController`, and `JointState` were no longer in the executable's local namespace.
+- Cause: the first visual demo refactor put reusable controller types in the `mujoco_tutorial` namespace but left the original executable using unqualified names from the previous anonymous-namespace implementation.
+- Fix: updated the executable to use `mujoco_tutorial::MujocoJointSystem`, `mujoco_tutorial::UprightPdController`, and `mujoco_tutorial::JointState`.
+- Affected docs: the double inverted pendulum guide states that the controller is now shared and namespaced.
+
+## 2026-07-08 - Visual Duration Should Cap Total Fixed Steps
+
+- Symptom: `tutorial_14_visualized_double_pendulum --duration 0.05` initially finished at `final_time=0.051`.
+- Cause: the first render loop advanced a full approximate 1/60 second frame chunk each render. With a 0.001 second MuJoCo timestep, that chunk rounds to 17 simulation steps, so the automatic duration boundary could be crossed by one or more timesteps.
+- Fix: compute integer `steps_per_frame` and integer `remaining_steps` with `step_count_for_duration()`, then clamp each render frame to the remaining step budget. The same run now reports `simulation_steps=50` and `final_time=0.05`.
+- Affected docs: the double inverted pendulum guide explains that rendering frames can group simulation steps but automatic runs still cap the total fixed-step count.
+
+## 2026-07-08 - Run CMake Probes Outside The Source Root
+
+- Symptom: an exploratory `cmake --find-package` check left an untracked top-level `CMakeFiles/` directory in the repository.
+- Cause: one-shot CMake find-package mode still writes scratch files relative to the current working directory when run from the source root.
+- Fix: removed the generated directory and kept subsequent verification in explicit build directories such as `build/` or `/tmp/...`.
+- Affected docs: the overview build section notes that exploratory CMake probes should not be run from the repository root.
+
+## 2026-07-08 - Visualization Changes The Default Text-Mode Assumption
+
+- Symptom: after adding `tutorial_14_visualized_double_pendulum`, the overview still said the tutorial was text-mode by default.
+- Cause: that wording was true for the first 13 demos, but the new visualization demo opens a GLFW/OpenGL window unless `--headless-check` is selected.
+- Fix: changed the overview to say most demos are text-mode and called out the visual demo's window/headless modes.
+- Affected docs: the overview documents the exception.
+
+## 2026-07-08 - Visualization Adds GLFW And OpenGL Build Dependencies
+
+- Symptom: code review found that top-level `find_package(OpenGL REQUIRED)` and `find_package(glfw3 REQUIRED)` would block configuration for users who only need the existing headless demos.
+- Cause: the first CMake change made the visualization dependencies global for the whole tutorial subproject.
+- Fix: changed the visual demo dependencies to `QUIET`, build `tutorial_14_visualized_double_pendulum` only when GLFW/OpenGL are found, and leave `tutorial_01` through `tutorial_13` buildable without them.
+- Affected docs: README and overview now state that CMake builds the windowed demo when it can find `glfw3` and `OpenGL`, otherwise it skips only that demo.
+
+## 2026-07-08 - Duration CLI Parsing Must Be Strict
+
+- Symptom: code review found that `--duration 0.05abc`, `--duration nan`, and `--duration inf` could be accepted by `std::stod`-based parsing.
+- Cause: the first parser did not check how many characters `std::stod` consumed and did not reject non-finite values.
+- Fix: validate full-string consumption, finite value, and non-negative value before accepting `--duration`.
+- Affected docs: the double inverted pendulum guide states that `--duration` must be finite and non-negative.
+
+## 2026-07-08 - Pair GLFW Lifecycle Cleanup
+
+- Symptom: code review found that a successful `glfwInit()` followed by failed `glfwCreateWindow()` entered fallback without an explicit `glfwTerminate()`.
+- Cause: the first implementation followed the short MuJoCo sample style and manually destroyed only the normal-path window.
+- Fix: added small RAII wrappers so initialized GLFW sessions terminate and created windows are destroyed on all return paths.
+- Affected docs: the double inverted pendulum guide records the GLFW lifecycle rule for the visual demo.

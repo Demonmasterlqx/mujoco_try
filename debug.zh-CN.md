@@ -85,3 +85,52 @@
 - 原因：绑定到 site 的 rangefinder ray 使用 site 的正 Z 轴，并且会排除与传感器 site 绑定在同一 body 上的 geom。早期版本要么朝向空处，要么把 target geom 放在 `worldbody`，也就是和 site 相同的 body 上。
 - 修复：沿 site 正 Z 方向在一个 child body 中添加 `range_target` geom，并把传感器重命名为 `target_range`。
 - 影响文档：传感器套件指南说明 `target_range` 应产生正的命中距离。
+
+## 2026-07-08 - 共享控制器重构需要带 Namespace 的名字
+
+- 现象：把双倒立摆控制器移动到共享教程文件后，`tutorial_10_double_inverted_pendulum` 编译失败，因为 `MujocoJointSystem`、`UprightPdController` 和 `JointState` 不再位于该 executable 的本地 namespace。
+- 原因：第一版可视化 demo 重构把可复用控制器类型放进了 `mujoco_tutorial` namespace，但原 executable 仍使用旧 anonymous-namespace 实现中的非限定名字。
+- 修复：把 executable 更新为使用 `mujoco_tutorial::MujocoJointSystem`、`mujoco_tutorial::UprightPdController` 和 `mujoco_tutorial::JointState`。
+- 影响文档：双倒立摆指南说明控制器现在是共享且带 namespace 的。
+
+## 2026-07-08 - 可视化 Duration 应限制总固定步数
+
+- 现象：`tutorial_14_visualized_double_pendulum --duration 0.05` 最初结束在 `final_time=0.051`。
+- 原因：第一版渲染循环每帧推进一个近似 1/60 秒的完整仿真块。MuJoCo timestep 为 0.001 秒时，这个块会取整到 17 个仿真 step，因此自动 duration 边界可能被跨过一个或多个 timestep。
+- 修复：用 `step_count_for_duration()` 计算整数 `steps_per_frame` 和整数 `remaining_steps`，并把每个渲染帧限制在剩余步数预算内。相同命令现在输出 `simulation_steps=50` 和 `final_time=0.05`。
+- 影响文档：双倒立摆指南说明渲染帧可以合并多个仿真 step，但自动运行仍会限制总固定步数。
+
+## 2026-07-08 - CMake 探测不要在源码根目录运行
+
+- 现象：一次探索性的 `cmake --find-package` 检查在仓库顶层留下了未跟踪的 `CMakeFiles/` 目录。
+- 原因：CMake 的一次性 find-package 模式从源码根目录运行时，仍会相对当前工作目录写入临时文件。
+- 修复：删除生成目录，并把后续验证放到明确的构建目录中，例如 `build/` 或 `/tmp/...`。
+- 影响文档：overview 构建章节提示探索性的 CMake 探测不要从仓库根目录发起。
+
+## 2026-07-08 - 可视化改变了默认文本模式假设
+
+- 现象：添加 `tutorial_14_visualized_double_pendulum` 后，overview 仍说教程默认是文本模式。
+- 原因：这个说法对前 13 个 demo 成立，但新的可视化 demo 默认会打开 GLFW/OpenGL 窗口，除非显式选择 `--headless-check`。
+- 修复：把 overview 改为“多数 demo 是文本模式”，并单独说明可视化 demo 的窗口模式和 headless 模式。
+- 影响文档：overview 记录了这个例外。
+
+## 2026-07-08 - 可视化新增 GLFW 和 OpenGL 构建依赖
+
+- 现象：代码审查发现顶层 `find_package(OpenGL REQUIRED)` 和 `find_package(glfw3 REQUIRED)` 会阻塞只需要已有 headless demos 的用户配置工程。
+- 原因：第一版 CMake 改动把可视化依赖变成了整个 tutorial 子项目的全局依赖。
+- 修复：把可视化 demo 依赖改为 `QUIET`，只有找到 GLFW/OpenGL 时才构建 `tutorial_14_visualized_double_pendulum`，并让 `tutorial_01` 到 `tutorial_13` 在缺少这些依赖时仍可构建。
+- 影响文档：README 和 overview 现在说明 CMake 能找到 `glfw3` 和 `OpenGL` 时会构建窗口 demo，否则只跳过该 demo。
+
+## 2026-07-08 - Duration CLI 解析必须严格
+
+- 现象：代码审查发现 `--duration 0.05abc`、`--duration nan` 和 `--duration inf` 可能被基于 `std::stod` 的解析接受。
+- 原因：第一版 parser 没检查 `std::stod` 消耗了多少字符，也没有拒绝非有限值。
+- 修复：接受 `--duration` 前检查整串都被消费、数值有限、且非负。
+- 影响文档：双倒立摆指南说明 `--duration` 必须有限且非负。
+
+## 2026-07-08 - GLFW 生命周期清理需要成对
+
+- 现象：代码审查发现 `glfwInit()` 成功但 `glfwCreateWindow()` 失败时，会直接进入 fallback，没有显式 `glfwTerminate()`。
+- 原因：第一版实现沿用了 MuJoCo 短 sample 的风格，只手动清理了正常路径中的窗口。
+- 修复：增加小型 RAII wrapper，让已初始化的 GLFW session 和已创建的 window 在所有返回路径上都能成对清理。
+- 影响文档：双倒立摆指南记录了可视化 demo 的 GLFW 生命周期规则。
